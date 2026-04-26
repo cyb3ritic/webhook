@@ -1,6 +1,9 @@
-// In-memory store for webhook requests + simulator config.
-// Module-level singleton — survives across server function calls within
-// the same worker instance. Intended for QA / dev usage.
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL || "",
+  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
+});
 
 export type JsonValue =
   | string
@@ -32,38 +35,39 @@ export type SimConfig = {
   allowedMethods: string[];
 };
 
-type Store = {
-  entries: WebhookEntry[];
-  config: SimConfig;
+const DEFAULT_CONFIG: SimConfig = {
+  statusCode: 200,
+  delaySeconds: 0,
+  dropConnection: false,
+  allowedMethods: ["GET", "POST", "HEAD"],
 };
 
-const g = globalThis as unknown as { __webhookStore?: Store };
-
-if (!g.__webhookStore) {
-  g.__webhookStore = {
-    entries: [],
-    config: {
-      statusCode: 200,
-      delaySeconds: 0,
-      dropConnection: false,
-      allowedMethods: ["GET", "POST", "HEAD"],
-    },
-  };
-} else if (!g.__webhookStore.config.allowedMethods) {
-  g.__webhookStore.config.allowedMethods = ["GET", "POST", "HEAD"];
+export async function addEntry(e: WebhookEntry) {
+  await redis.lpush("webhook:entries", e);
+  await redis.ltrim("webhook:entries", 0, 199);
 }
 
-export const store = g.__webhookStore;
-
-export function addEntry(e: WebhookEntry) {
-  store.entries.unshift(e);
-  if (store.entries.length > 200) store.entries.length = 200;
+export async function getEntries(): Promise<WebhookEntry[]> {
+  const entries = await redis.lrange<WebhookEntry>("webhook:entries", 0, 199);
+  return entries || [];
 }
 
-export function clearEntries() {
-  store.entries.length = 0;
+export async function clearEntries() {
+  await redis.del("webhook:entries");
 }
 
-export function setConfig(patch: Partial<SimConfig>) {
-  store.config = { ...store.config, ...patch };
+export async function getConfig(): Promise<SimConfig> {
+  const cfg = await redis.get<SimConfig>("webhook:config");
+  if (!cfg) return DEFAULT_CONFIG;
+  if (!cfg.allowedMethods) {
+    cfg.allowedMethods = ["GET", "POST", "HEAD"];
+  }
+  return cfg;
+}
+
+export async function setConfig(patch: Partial<SimConfig>) {
+  const current = await getConfig();
+  const next = { ...current, ...patch };
+  await redis.set("webhook:config", next);
+  return next;
 }

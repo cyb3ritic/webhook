@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { addEntry, store, type WebhookEntry } from "@/server/webhook-store";
+import { addEntry, getConfig, type WebhookEntry } from "@/server/webhook-store";
 
 const STATUS_TEXT: Record<number, string> = {
   200: "OK",
@@ -34,7 +34,7 @@ function getClientIp(req: Request): string {
 }
 
 async function handle(request: Request) {
-  const cfg = store.config;
+  const cfg = await getConfig();
   const headersObj: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     headersObj[k] = v;
@@ -94,7 +94,7 @@ async function handle(request: Request) {
   };
   
   if ((cfg.allowedMethods || []).includes(request.method)) {
-    addEntry(entry);
+    await addEntry(entry);
   }
 
   if (delayMs > 0) {
