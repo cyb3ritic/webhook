@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
-import { Activity, Pause, Play, Trash2, Zap, AlertTriangle, Copy, Check, Radio } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
 import {
-  getWebhookState,
-  updateConfig,
-  clearLogs,
-} from "@/server/webhook-functions";
+  Activity,
+  Pause,
+  Play,
+  Trash2,
+  Zap,
+  AlertTriangle,
+  Copy,
+  Check,
+  Radio,
+} from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { getWebhookState, updateConfig, clearLogs } from "@/server/webhook-functions";
 import type { SimConfig, WebhookEntry } from "@/server/webhook-store";
 import { WebhookCard } from "@/components/webhook/WebhookCard";
 
@@ -35,7 +41,8 @@ export function Dashboard() {
   const [entries, setEntries] = useState<WebhookEntry[]>([]);
   const [config, setConfig] = useState<SimConfig>({
     statusCode: 200,
-    delaySeconds: 0,
+    delayHeadersSeconds: 0,
+    delayBodySeconds: 0,
     dropConnection: false,
     allowedMethods: ["GET", "POST", "HEAD"],
   });
@@ -111,9 +118,7 @@ export function Dashboard() {
               <Radio size={16} className="text-primary" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold tracking-tight">
-                Webhook Simulator
-              </h1>
+              <h1 className="text-sm font-semibold tracking-tight">Webhook Simulator</h1>
               <p className="text-[11px] text-muted-foreground font-mono">
                 Mock ITSM endpoint · QA hostile-environment testing
               </p>
@@ -218,16 +223,19 @@ function ControlPanel({
             Logged Methods
           </label>
           <div className="flex gap-4 items-center flex-wrap">
-            {["GET", "POST", "HEAD"].map(method => (
-              <label key={method} className="flex items-center gap-1.5 text-sm font-mono text-foreground cursor-pointer">
+            {["GET", "POST", "HEAD"].map((method) => (
+              <label
+                key={method}
+                className="flex items-center gap-1.5 text-sm font-mono text-foreground cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={config.allowedMethods?.includes(method) ?? true}
                   onChange={(e) => {
                     const current = config.allowedMethods || ["GET", "POST", "HEAD"];
-                    const next = e.target.checked 
-                      ? [...current, method] 
-                      : current.filter(m => m !== method);
+                    const next = e.target.checked
+                      ? [...current, method]
+                      : current.filter((m) => m !== method);
                     onChange({ allowedMethods: next });
                   }}
                   className="accent-primary h-3.5 w-3.5"
@@ -237,7 +245,8 @@ function ControlPanel({
             ))}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Only selected methods will be logged in the dashboard. Unselected methods are silently handled.
+            Only selected methods will be logged in the dashboard. Unselected methods are silently
+            handled.
           </p>
         </div>
 
@@ -263,23 +272,21 @@ function ControlPanel({
           </p>
         </div>
 
-        {/* Delay */}
+        {/* Delay Headers */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
-              Artificial delay
+              TTFB Delay (Headers)
             </label>
-            <span className="font-mono text-xs text-foreground">
-              {config.delaySeconds}s
-            </span>
+            <span className="font-mono text-xs text-foreground">{config.delayHeadersSeconds}s</span>
           </div>
           <input
             type="range"
             min={0}
             max={30}
             step={1}
-            value={config.delaySeconds}
-            onChange={(e) => onChange({ delaySeconds: Number(e.target.value) })}
+            value={config.delayHeadersSeconds}
+            onChange={(e) => onChange({ delayHeadersSeconds: Number(e.target.value) })}
             className="w-full accent-primary"
           />
           <div className="flex items-center gap-2">
@@ -287,17 +294,51 @@ function ControlPanel({
               type="number"
               min={0}
               max={30}
-              value={config.delaySeconds}
+              value={config.delayHeadersSeconds}
               onChange={(e) =>
                 onChange({
-                  delaySeconds: Math.max(0, Math.min(30, Number(e.target.value) || 0)),
+                  delayHeadersSeconds: Math.max(0, Math.min(30, Number(e.target.value) || 0)),
                 })
               }
               className="w-20 rounded-md border border-panel-border bg-background/80 px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-[11px] text-muted-foreground">
-              seconds (0–30) before responding
+              seconds before sending headers
             </span>
+          </div>
+        </div>
+
+        {/* Delay Body */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
+              Body Delay
+            </label>
+            <span className="font-mono text-xs text-foreground">{config.delayBodySeconds}s</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={config.delayBodySeconds}
+            onChange={(e) => onChange({ delayBodySeconds: Number(e.target.value) })}
+            className="w-full accent-primary"
+          />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              max={30}
+              value={config.delayBodySeconds}
+              onChange={(e) =>
+                onChange({
+                  delayBodySeconds: Math.max(0, Math.min(30, Number(e.target.value) || 0)),
+                })
+              }
+              className="w-20 rounded-md border border-panel-border bg-background/80 px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="text-[11px] text-muted-foreground">seconds before sending body</span>
           </div>
         </div>
 
@@ -332,22 +373,14 @@ function ControlPanel({
   );
 }
 
-function Switch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-colors ${
-        checked
-          ? "bg-destructive/80 border-destructive"
-          : "bg-secondary border-panel-border"
+        checked ? "bg-destructive/80 border-destructive" : "bg-secondary border-panel-border"
       }`}
     >
       <span
@@ -362,11 +395,9 @@ function Switch({
 function UsageHint({ endpoint }: { endpoint: string }) {
   return (
     <div className="rounded-lg border border-panel-border bg-panel p-4 space-y-2">
-      <h3 className="text-xs uppercase tracking-wider text-muted-foreground">
-        Quick test
-      </h3>
+      <h3 className="text-xs uppercase tracking-wider text-muted-foreground">Quick test</h3>
       <pre className="font-mono text-[11px] leading-relaxed text-foreground bg-background/80 border border-panel-border rounded p-2 overflow-auto whitespace-pre-wrap break-all">
-{`curl -X POST ${endpoint} \\
+        {`curl -X POST ${endpoint} \\
   -H "Authorization: Bearer test-token" \\
   -H "Content-Type: application/json" \\
   -d '{"alert":"disk_full","severity":"critical","host":"app-01","メッセージ":"テスト"}'`}
@@ -383,8 +414,7 @@ function EmptyState({ endpoint }: { endpoint: string }) {
       </div>
       <h3 className="text-sm font-medium text-foreground">Awaiting webhooks…</h3>
       <p className="text-xs text-muted-foreground mt-1 font-mono break-all">
-        POST any payload to{" "}
-        <span className="text-foreground">{endpoint}</span>
+        POST any payload to <span className="text-foreground">{endpoint}</span>
       </p>
     </div>
   );
