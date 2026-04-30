@@ -35,6 +35,15 @@ function getClientIp(req: Request): string {
 
 async function handle(request: Request) {
   const cfg = await getConfig();
+  const delayMs = Math.max(0, Math.min(30, cfg.delaySeconds)) * 1000;
+
+  // 1. Artificial Delay FIRST
+  // This ensures the system completely sleeps before reading the request stream,
+  // preventing early headers (like 100-Continue) from being sent by the underlying server.
+  if (delayMs > 0) {
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+
   const headersObj: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     headersObj[k] = v;
@@ -76,8 +85,6 @@ async function handle(request: Request) {
     bodyRaw = "";
   }
 
-  const delayMs = Math.max(0, Math.min(30, cfg.delaySeconds)) * 1000;
-
   const entry: WebhookEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     timestamp: ts,
@@ -95,10 +102,6 @@ async function handle(request: Request) {
   
   if ((cfg.allowedMethods || []).includes(request.method)) {
     await addEntry(entry);
-  }
-
-  if (delayMs > 0) {
-    await new Promise((r) => setTimeout(r, delayMs));
   }
 
   if (cfg.dropConnection) {
