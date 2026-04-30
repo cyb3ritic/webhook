@@ -276,7 +276,7 @@ function ControlPanel({
           <input
             type="range"
             min={0}
-            max={30}
+            max={90}
             step={1}
             value={config.delaySeconds}
             onChange={(e) => onChange({ delaySeconds: Number(e.target.value) })}
@@ -286,17 +286,17 @@ function ControlPanel({
             <input
               type="number"
               min={0}
-              max={30}
+              max={90}
               value={config.delaySeconds}
               onChange={(e) =>
                 onChange({
-                  delaySeconds: Math.max(0, Math.min(30, Number(e.target.value) || 0)),
+                  delaySeconds: Math.max(0, Math.min(90, Number(e.target.value) || 0)),
                 })
               }
               className="w-20 rounded-md border border-panel-border bg-background/80 px-2 py-1 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <span className="text-[11px] text-muted-foreground">
-              seconds (0–30) before responding
+              seconds (0–90) before responding
             </span>
           </div>
         </div>

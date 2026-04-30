@@ -76,7 +76,7 @@ async function handle(request: Request) {
     bodyRaw = "";
   }
 
-  const delayMs = Math.max(0, Math.min(30, cfg.delaySeconds)) * 1000;
+  const delayMs = Math.max(0, Math.min(90, cfg.delaySeconds)) * 1000;
 
   const entry: WebhookEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
