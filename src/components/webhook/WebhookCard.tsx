@@ -46,10 +46,14 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
     entry.contentType.includes("json") ||
     (typeof entry.bodyParsed === "object" && entry.bodyParsed !== null);
 
-  const prettyBody = isJsonLike ? highlightJson(entry.bodyParsed) : escapeBody(entry.bodyRaw);
+  const prettyBody = isJsonLike
+    ? highlightJson(entry.bodyParsed)
+    : escapeBody(entry.bodyRaw);
 
   const copyBody = async () => {
-    const txt = isJsonLike ? JSON.stringify(entry.bodyParsed, null, 2) : entry.bodyRaw;
+    const txt = isJsonLike
+      ? JSON.stringify(entry.bodyParsed, null, 2)
+      : entry.bodyRaw;
     try {
       await navigator.clipboard.writeText(txt);
       setCopied(true);
@@ -71,9 +75,7 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
               </span>
               <span
                 className={`font-mono text-xs px-2 py-0.5 rounded border ${statusTone(entry.respondedStatus)}`}
-                title={
-                  entry.dropped ? "Connection dropped (no headers sent)" : "Simulated response"
-                }
+                title={entry.dropped ? "Connection dropped (no headers sent)" : "Simulated response"}
               >
                 {entry.dropped ? (
                   <span className="inline-flex items-center gap-1">
@@ -83,10 +85,9 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
                   entry.respondedStatus
                 )}
               </span>
-              {(entry.delayHeadersMs > 0 || entry.delayBodyMs > 0) && (
+              {entry.delayMs > 0 && (
                 <span className="font-mono text-xs px-2 py-0.5 rounded border border-warning/40 text-warning bg-warning/10 inline-flex items-center gap-1">
-                  <Clock size={12} /> +
-                  {((entry.delayHeadersMs + entry.delayBodyMs) / 1000).toFixed(1)}s
+                  <Clock size={12} /> +{(entry.delayMs / 1000).toFixed(1)}s
                 </span>
               )}
             </div>
@@ -95,18 +96,14 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
                 <Globe size={12} /> {entry.sourceIp}
               </span>
               <span className="text-foreground">{formatTs(entry.timestamp)}</span>
-              <ChevronRight
-                size={16}
-                className="text-muted-foreground group-hover:text-foreground transition-colors"
-              />
+              <ChevronRight size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
           </div>
 
           {/* Subline */}
           <div className="px-4 py-2 text-[11px] font-mono text-muted-foreground border-t border-panel-border/60 truncate bg-panel/50 flex items-center justify-between">
             <div>
-              {dateLine(entry.timestamp)} · {entry.contentType || "(no content-type)"} ·{" "}
-              {entry.bodyRaw ? `${entry.bodyRaw.length} bytes` : "empty body"}
+              {dateLine(entry.timestamp)} · {entry.contentType || "(no content-type)"} · {entry.bodyRaw ? `${entry.bodyRaw.length} bytes` : "empty body"}
             </div>
             {headerEntries.some(([k]) => SENSITIVE_HEADERS.includes(k.toLowerCase())) && (
               <span className="inline-flex items-center gap-1 text-warning/80 shrink-0 ml-2">
@@ -117,10 +114,7 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
         </button>
       </SheetTrigger>
 
-      <SheetContent
-        side="right"
-        className="w-[95vw] sm:max-w-xl md:max-w-2xl overflow-hidden p-0 flex flex-col gap-0 border-panel-border bg-background"
-      >
+      <SheetContent side="right" className="w-[95vw] sm:max-w-xl md:max-w-2xl overflow-hidden p-0 flex flex-col gap-0 border-panel-border bg-background">
         <SheetHeader className="p-6 border-b border-panel-border bg-card/40 shrink-0 text-left space-y-0">
           <div className="flex items-center gap-3 mb-4">
             <span className="font-mono text-sm px-2.5 py-1 rounded bg-secondary text-secondary-foreground font-medium">
@@ -132,17 +126,11 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
               {entry.dropped ? "DROPPED" : entry.respondedStatus}
             </span>
             <SheetTitle className="sr-only">Request Details</SheetTitle>
-            <SheetDescription className="sr-only">
-              Detailed inspection of the captured webhook request.
-            </SheetDescription>
+            <SheetDescription className="sr-only">Detailed inspection of the captured webhook request.</SheetDescription>
           </div>
           <div className="flex flex-col gap-1.5 text-xs text-muted-foreground font-mono">
-            <span className="text-foreground">
-              <Globe size={13} className="inline mr-1 text-muted-foreground" /> {entry.sourceIp}
-            </span>
-            <span>
-              <Clock size={13} className="inline mr-1" /> {dateLine(entry.timestamp)}
-            </span>
+            <span className="text-foreground"><Globe size={13} className="inline mr-1 text-muted-foreground" /> {entry.sourceIp}</span>
+            <span><Clock size={13} className="inline mr-1" /> {dateLine(entry.timestamp)}</span>
             <span>ID: {entry.id}</span>
           </div>
         </SheetHeader>
@@ -167,10 +155,7 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
               {headerEntries.map(([k, v]) => {
                 const sensitive = SENSITIVE_HEADERS.includes(k.toLowerCase());
                 return (
-                  <div
-                    key={k}
-                    className="grid grid-cols-[140px_1fr] sm:grid-cols-[180px_1fr] gap-4 px-4 py-2 hover:bg-card/40 transition-colors"
-                  >
+                  <div key={k} className="grid grid-cols-[140px_1fr] sm:grid-cols-[180px_1fr] gap-4 px-4 py-2 hover:bg-card/40 transition-colors">
                     <span className={sensitive ? "text-warning" : "text-accent"}>{k}</span>
                     <span className="text-foreground break-all">{v}</span>
                   </div>
@@ -198,7 +183,7 @@ export function WebhookCard({ entry }: { entry: WebhookEntry }) {
                 </button>
               )}
             </div>
-
+            
             <div className="rounded-md border border-panel-border bg-panel overflow-hidden">
               {entry.bodyRaw ? (
                 <div className="p-4 overflow-auto scrollbar-thin">

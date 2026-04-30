@@ -54,7 +54,9 @@ async function handle(request: Request) {
         } catch {
           bodyParsed = bodyRaw;
         }
-      } else if (contentType.includes("application/x-www-form-urlencoded")) {
+      } else if (
+        contentType.includes("application/x-www-form-urlencoded")
+      ) {
         const params = new URLSearchParams(bodyRaw);
         const o: Record<string, string> = {};
         params.forEach((v, k) => {
@@ -74,8 +76,7 @@ async function handle(request: Request) {
     bodyRaw = "";
   }
 
-  const delayHeadersMs = Math.max(0, Math.min(30, cfg.delayHeadersSeconds)) * 1000;
-  const delayBodyMs = Math.max(0, Math.min(30, cfg.delayBodySeconds)) * 1000;
+  const delayMs = Math.max(0, Math.min(30, cfg.delaySeconds)) * 1000;
 
   const entry: WebhookEntry = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -88,17 +89,16 @@ async function handle(request: Request) {
     bodyParsed,
     contentType,
     respondedStatus: cfg.dropConnection ? null : cfg.statusCode,
-    delayHeadersMs,
-    delayBodyMs,
+    delayMs,
     dropped: cfg.dropConnection,
   };
-
+  
   if ((cfg.allowedMethods || []).includes(request.method)) {
     await addEntry(entry);
   }
 
-  if (delayHeadersMs > 0) {
-    await new Promise((r) => setTimeout(r, delayHeadersMs));
+  if (delayMs > 0) {
+    await new Promise((r) => setTimeout(r, delayMs));
   }
 
   if (cfg.dropConnection) {
@@ -113,7 +113,7 @@ async function handle(request: Request) {
 
   const status = cfg.statusCode;
   const statusText = STATUS_TEXT[status] || "";
-  const bodyString =
+  const body =
     status === 204
       ? null
       : JSON.stringify({
@@ -124,22 +124,7 @@ async function handle(request: Request) {
           id: entry.id,
         });
 
-  if (delayBodyMs > 0 && bodyString !== null) {
-    const stream = new ReadableStream({
-      async start(controller) {
-        await new Promise((r) => setTimeout(r, delayBodyMs));
-        controller.enqueue(new TextEncoder().encode(bodyString));
-        controller.close();
-      },
-    });
-    return new Response(stream, {
-      status,
-      statusText,
-      headers: { "content-type": "application/json" },
-    });
-  }
-
-  return new Response(bodyString, {
+  return new Response(body, {
     status,
     statusText,
     headers: { "content-type": "application/json" },
