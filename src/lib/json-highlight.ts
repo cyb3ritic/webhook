@@ -1,7 +1,10 @@
 import type { JsonValue } from "@/server/webhook-store";
 
 function escapeHtml(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 // Returns HTML string with span tokens for syntax coloring.

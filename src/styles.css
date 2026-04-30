@@ -51,13 +51,13 @@
   --panel-border: oklch(0.28 0.015 260);
   --popover: oklch(0.205 0.013 260);
   --popover-foreground: oklch(0.96 0.005 260);
-  --primary: oklch(0.72 0.18 145); /* terminal green */
+  --primary: oklch(0.72 0.18 145);          /* terminal green */
   --primary-foreground: oklch(0.16 0.012 260);
   --secondary: oklch(0.27 0.015 260);
   --secondary-foreground: oklch(0.96 0.005 260);
   --muted: oklch(0.24 0.012 260);
   --muted-foreground: oklch(0.68 0.02 260);
-  --accent: oklch(0.7 0.16 230); /* cyan */
+  --accent: oklch(0.7 0.16 230);            /* cyan */
   --accent-foreground: oklch(0.16 0.012 260);
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
@@ -73,8 +73,7 @@
   * {
     border-color: var(--color-border);
   }
-  html,
-  body {
+  html, body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -85,16 +84,9 @@
 }
 
 @layer utilities {
-  .font-mono {
-    font-family: var(--font-mono);
-  }
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  .font-mono { font-family: var(--font-mono); }
+  .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: var(--color-panel-border);
     border-radius: 4px;
@@ -105,19 +97,8 @@
 }
 
 /* JSON syntax highlight tokens */
-.tok-key {
-  color: oklch(0.78 0.16 230);
-} /* cyan keys */
-.tok-str {
-  color: oklch(0.78 0.15 145);
-} /* green strings */
-.tok-num {
-  color: oklch(0.78 0.16 75);
-} /* amber numbers */
-.tok-bool {
-  color: oklch(0.74 0.2 320);
-} /* magenta */
-.tok-null {
-  color: oklch(0.6 0.02 260);
-  font-style: italic;
-}
+.tok-key { color: oklch(0.78 0.16 230); }     /* cyan keys */
+.tok-str { color: oklch(0.78 0.15 145); }     /* green strings */
+.tok-num { color: oklch(0.78 0.16 75); }      /* amber numbers */
+.tok-bool { color: oklch(0.74 0.2 320); }     /* magenta */
+.tok-null { color: oklch(0.6 0.02 260); font-style: italic; }
