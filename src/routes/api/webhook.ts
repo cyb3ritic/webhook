@@ -37,6 +37,13 @@ async function handle(request: Request) {
   const cfg = await getConfig();
   const delayMs = Math.max(0, Math.min(30, cfg.delaySeconds)) * 1000;
 
+  // 1. Artificial Delay FIRST
+  // This ensures the system completely sleeps before reading the request stream,
+  // preventing early headers (like 100-Continue) from being sent by the underlying server.
+  if (delayMs > 0) {
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+
   const headersObj: Record<string, string> = {};
   request.headers.forEach((v, k) => {
     headersObj[k] = v;
@@ -95,13 +102,6 @@ async function handle(request: Request) {
   
   if ((cfg.allowedMethods || []).includes(request.method)) {
     await addEntry(entry);
-  }
-
-  // Artificial Delay
-  // Placed here so the request is logged to the dashboard immediately,
-  // but the server waits before sending the final HTTP response to the client.
-  if (delayMs > 0) {
-    await new Promise((r) => setTimeout(r, delayMs));
   }
 
   if (cfg.dropConnection) {
